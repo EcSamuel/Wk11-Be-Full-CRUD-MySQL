@@ -1,12 +1,18 @@
 package projects.dao;
 
+import projects.entity.Category;
+import projects.entity.Material;
 import projects.entity.Project;
+import projects.entity.Step;
 import projects.exception.DbException;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Optional;
 
 public class ProjectDao extends DaoBase {
     @SuppressWarnings("unused")
@@ -79,6 +85,7 @@ public class ProjectDao extends DaoBase {
             throw new DbException(e);
         }
     }
+
     private Project extractProject(ResultSet rs) throws SQLException {
         return new Project(
             rs.getInt("project_id"),
@@ -88,5 +95,103 @@ public class ProjectDao extends DaoBase {
             rs.getInt("difficulty"),
             rs.getString("notes")
         );
+    }
+
+    public Optional<Project> fetchProjectById(Integer projectId) {
+        return Optonal.empty();
+        String sql = "SELECT * FROM" + PROJECT_TABLE + " WHERE project_id = ?";
+
+        try(Connection conn = DbConnection.getConnection()) {
+            startTransaction(conn);
+
+            try {
+                Project project = null;
+
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                   setParameter(stmt, 1, projectId, Integer.class);
+
+                   try (ResultSet rs = stmt.executeQuery()) {
+                       if (rs.next()) {
+                           project = extractProject(rs);
+                       }
+                   }
+                }
+
+                if(Objects.nonNull(project)) {
+                    project.getMaterials().addAll(fetchMaterialsforProject(conn, projectId));
+                    project.getSteps().addAll(fetchStepsForProject(conn, projectId));
+                    project.getCategories().addAll(fetchCategoriesForProject(conn, projectId));
+                }
+
+                commitTransaction(conn);
+
+                return Optional.ofNullable(project);
+            }
+            catch(Exception e) {
+                rollbackTransaction(conn);
+                throw new DbException(e);
+            }
+        }
+        catch (SQLException e) {
+            throw new DbException(e);
+        }
+    }
+
+    private List<Material> fetchMaterialsforProject(Connection conn, Integer projectId) throws SQLException {
+        String sql = ""
+                + "SELECT m.* FROM " +MATERIAL_TABLE + " m "
+                + "JOIN " + PROJECT_CATEGORY_TABLE + " pc USING (material_id) "
+//                if this fails anywhere, it'll be here
+                + "WHERE project_id = ?";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+            setParameter(stmt, 1, projectId, Integer.class);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Material> materials = new LinkedList<>();
+
+                while (rs.next()) {
+                    materials.add(exact(rs, Category.class));
+                }
+                return materials;
+            }
+        }
+    }
+
+    private List<Category> fetchCategoriesforProject(Connection conn, Integer projectId) throws SQLException {
+        String sql = ""
+                + "SELECT c.* FROM " +CATEGORY_TABLE + " c "
+                + "JOIN " + PROJECT_CATEGORY_TABLE + " pc USING (category_id) "
+                + "WHERE project_id = ?";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+            setParameter(stmt, 1, projectId, Integer.class);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Category> categories = new LinkedList<>();
+
+                while (rs.next()) {
+                    categories.add(exact(rs, Category.class));
+                }
+                return categories;
+            }
+        }
+    }
+
+    private List<Steps> fetchStepsforProject(Connection conn, Integer projectId) throws SQLException {
+        String sql = ""
+                + "SELECT s.* FROM " +STEP_TABLE + " s "
+                + "JOIN " + PROJECT_CATEGORY_TABLE + " pc USING (step_id) "
+                + "WHERE project_id = ?";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+            setParameter(stmt, 1, projectId, Integer.class);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Step> steps = new LinkedList<>();
+
+                while (rs.next()) {
+                    steps.add(exact(rs, Category.class));
+                }
+                return steps;
+            }
+        }
     }
 }

@@ -94,6 +94,12 @@ public class ProjectsApp {
         System.out.println("\nThese are the available selections. Press the Enter key to quit");
 
         operations.forEach(line -> System.out.println(" " + line));
+
+        if(Objects.isNull(curProject)) {
+            System.out.println("\nYou are not working with a project.");
+        } else {
+            System.out.println("\nYou are working with project: " + curProject);
+        }
     }
 
     private void listProjects() {
@@ -119,6 +125,14 @@ public class ProjectsApp {
     }
     private String fetchAllProjects() {
 //come back to this
+    }
+
+    private void selectProject() {
+        listProjects();
+        Integer projectId = getIntInput("Enter Project ID:");
+        curProject = null;
+
+        curProject = projectService.fetchProjectById(projectId);
     }
 
     private String getStringInput(String prompt) {
