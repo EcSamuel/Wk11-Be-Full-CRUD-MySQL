@@ -118,7 +118,7 @@ public class ProjectDao extends DaoBase {
                 }
 
                 if(Objects.nonNull(project)) {
-                    project.getMaterials().addAll(fetchMaterialsforProject(conn, projectId));
+                    project.getMaterials().addAll(fetchMaterialsForProject(conn, projectId));
                     project.getSteps().addAll(fetchStepsForProject(conn, projectId));
                     project.getCategories().addAll(fetchCategoriesForProject(conn, projectId));
                 }
@@ -137,10 +137,10 @@ public class ProjectDao extends DaoBase {
         }
     }
 
-    private List<Material> fetchMaterialsforProject(Connection conn, Integer projectId) throws SQLException {
+    private List<Material> fetchMaterialsForProject(Connection conn, Integer projectId) throws SQLException {
         String sql = ""
                 + "SELECT m.* FROM " +MATERIAL_TABLE + " m "
-                + "JOIN " + PROJECT_CATEGORY_TABLE + " pc USING (material_id) "
+                + "JOIN " + PROJECT_TABLE + " p USING (project_id) "
 //                if this fails anywhere, it'll be here
                 + "WHERE project_id = ?";
         try(PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -150,14 +150,14 @@ public class ProjectDao extends DaoBase {
                 List<Material> materials = new LinkedList<>();
 
                 while (rs.next()) {
-                    materials.add(exact(rs, Category.class));
+                    materials.add(extract(rs, Category.class));
                 }
                 return materials;
             }
         }
     }
 
-    private List<Category> fetchCategoriesforProject(Connection conn, Integer projectId) throws SQLException {
+    private List<Category> fetchCategoriesForProject(Connection conn, Integer projectId) throws SQLException {
         String sql = ""
                 + "SELECT c.* FROM " +CATEGORY_TABLE + " c "
                 + "JOIN " + PROJECT_CATEGORY_TABLE + " pc USING (category_id) "
@@ -169,17 +169,17 @@ public class ProjectDao extends DaoBase {
                 List<Category> categories = new LinkedList<>();
 
                 while (rs.next()) {
-                    categories.add(exact(rs, Category.class));
+                    categories.add(extract(rs, Category.class));
                 }
                 return categories;
             }
         }
     }
 
-    private List<Steps> fetchStepsforProject(Connection conn, Integer projectId) throws SQLException {
+    private List<Step> fetchStepsForProject(Connection conn, Integer projectId) throws SQLException {
         String sql = ""
                 + "SELECT s.* FROM " +STEP_TABLE + " s "
-                + "JOIN " + PROJECT_CATEGORY_TABLE + " pc USING (step_id) "
+                + "JOIN " + PROJECT_TABLE + " p USING (project_id) "
                 + "WHERE project_id = ?";
         try(PreparedStatement stmt = conn.prepareStatement(sql)) {
             setParameter(stmt, 1, projectId, Integer.class);
@@ -188,7 +188,7 @@ public class ProjectDao extends DaoBase {
                 List<Step> steps = new LinkedList<>();
 
                 while (rs.next()) {
-                    steps.add(exact(rs, Category.class));
+                    steps.add(extract(rs, Step.class));
                 }
                 return steps;
             }
