@@ -3,8 +3,9 @@ package projects.service;
 import projects.entity.Project;
 import projects.dao.ProjectDao;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.NoSuchElementException;
-
+import java.util.Optional;
 
 public class ProjectService {
     private ProjectDao projectDao = new ProjectDao();
@@ -17,16 +18,16 @@ public class ProjectService {
         return projectDao.fetchAllProjects();
     }
 
-    public void addProject(String projectName, BigDecimal projectBudget) {
+    public void addProject(String projectName, BigDecimal estimatedHours) {
         System.out.println("Adding project " + projectName);
         Project project = new Project();
         project.setProjectName(projectName);
-        project.setEstimatedHours(projectBudget);
+        project.setEstimatedHours(estimatedHours);
         projectDao.insertProject(project);
     }
 
     public Project fetchProjectById(Integer projectId) {
-        Optional<Project> project = projectDao.fetchProjectById(projectId);
-        .orElseThrow(() -> new NoSuchElementException("A Project with id " + projectId + " does not exist"));
-    };
+        return projectDao.fetchProjectById(projectId)
+                .orElseThrow(() -> new NoSuchElementException("A Project with id " + projectId + " does not exist"));
+    }
 }

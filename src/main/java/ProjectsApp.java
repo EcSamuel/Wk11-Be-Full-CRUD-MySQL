@@ -1,6 +1,7 @@
 import projects.entity.Project;
 import projects.service.ProjectService;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Scanner;
 import java.math.BigDecimal;
@@ -11,6 +12,8 @@ public class ProjectsApp {
             "2) List projects",
             "3) Select a project"
     );
+
+    private Project curProject;
 
     private Scanner scanner = new Scanner(System.in);
 
@@ -30,7 +33,7 @@ public class ProjectsApp {
                     }
                     case 2 -> {
                         System.out.println("Listing projects");
-                        listProjects()
+                        listProjects();
                     }
                     case 3 -> {
                         System.out.println("Selecting a project");
@@ -107,7 +110,7 @@ public class ProjectsApp {
         System.out.println("\nProjects:");
         projects.forEach(project -> System.out.println(
                 " " + project.getProjectId()
-                + ": " project.setProjectName()));
+                        + ": " + project.getProjectName()));
     }
 
     private Integer getIntInput(String prompt) {
@@ -123,16 +126,17 @@ public class ProjectsApp {
             throw new IllegalArgumentException(input + " is not a valid number.");
         }
     }
-    private String fetchAllProjects() {
-//come back to this
-    }
 
     private void selectProject() {
         listProjects();
         Integer projectId = getIntInput("Enter Project ID:");
         curProject = null;
 
-        curProject = projectService.fetchProjectById(projectId);
+        try {
+            curProject = projectService.fetchProjectById(projectId);
+        } catch (NoSuchElementException e) {
+            System.out.println("\nError: " + e.getMessage());
+        }
     }
 
     private String getStringInput(String prompt) {
@@ -141,8 +145,6 @@ public class ProjectsApp {
 
         return input.isBlank() ? null : input.trim();
     }
-
-    private void curProject
 
     public static void main(String[] args) {
         new ProjectsApp().processUserSelections();
