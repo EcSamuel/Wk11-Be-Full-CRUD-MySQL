@@ -129,20 +129,27 @@ public class ProjectsApp {
 
     private void selectProject() {
         listProjects();
-        Integer projectId = getIntInput("Enter Project ID:");
-        curProject = null;
+        Integer projectId = null;
+
+        while (projectId == null) {
+            projectId = getIntInput("Enter a project ID to select a project");
+            if (projectId == null) {
+                System.out.println("Please enter a valid project ID");
+            }
+        }
 
         try {
             curProject = projectService.fetchProjectById(projectId);
+            System.out.println("\nYou have selected project: " + curProject.getProjectName());
         } catch (NoSuchElementException e) {
             System.out.println("\nError: " + e.getMessage());
+            curProject = null;
         }
     }
 
     private String getStringInput(String prompt) {
         System.out.print(prompt + ": ");
         String input = scanner.nextLine();
-
         return input.isBlank() ? null : input.trim();
     }
 
