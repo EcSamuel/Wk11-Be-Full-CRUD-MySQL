@@ -2,6 +2,8 @@ package projects.service;
 
 import projects.entity.Project;
 import projects.dao.ProjectDao;
+import projects.exception.DbException;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -29,5 +31,11 @@ public class ProjectService {
     public Project fetchProjectById(Integer projectId) {
         return projectDao.fetchProjectById(projectId)
                 .orElseThrow(() -> new NoSuchElementException("A Project with id " + projectId + " does not exist"));
+    }
+
+    public void modifyProjectDetails(Project newProject) {
+        if (!projectDao.modifyProjectDetails(newProject)) {
+            throw new DbException("Project with ID=" + newProject.getProjectId() + " does not exist");
+        }
     }
 }

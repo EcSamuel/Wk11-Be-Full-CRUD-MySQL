@@ -5,12 +5,14 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Scanner;
 import java.math.BigDecimal;
+import java.lang.reflect.Field;
 
 public class ProjectsApp {
     private List<String> operations = List.of(
             "1) Add a project",
             "2) List projects",
-            "3) Select a project"
+            "3) Select a project",
+            "4) Update a project"
     );
 
     private Project curProject;
@@ -39,11 +41,90 @@ public class ProjectsApp {
                         System.out.println("Selecting a project");
                         selectProject();
                     }
+                    case 4 -> {
+                        System.out.println("Updating project");
+                        updateProjectDetails();
+                    }
                     default -> System.out.println("\n" + selection + " is not a valid selection. Try again.");
                 }
             } catch (Exception e) {
                 System.out.println("\nError: " + e + " Try Again.");
             }
+        }
+    }
+
+    private void updateProjectDetails() {
+        // a. Check if curProject is null
+        if (curProject == null) {
+            System.out.println("\nPlease select a project.");
+            return;
+        }
+
+        // b. Print current project details
+        System.out.println("Current project details:");
+        try {
+            Field[] fields = Project.class.getDeclaredFields();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                String fieldName = field.getName();
+                Object fieldValue = field.get(curProject);
+                System.out.println(fieldName + ": " + fieldValue);
+            }
+        } catch (IllegalAccessException e) {
+            System.out.println("Error accessing project fields: " + e.getMessage());
+        }
+
+        // c. Create new Project object and update fields
+        Project newProject = new Project();
+        Scanner scanner = new Scanner(System.in);
+
+        try {
+            Field[] fields = Project.class.getDeclaredFields();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                String fieldName = field.getName();
+                if (fieldName.equals("projectId") || fieldName.equals("materials") || fieldName.equals("categories")|| fieldName.equals("steps")) {
+                    continue; // Skip fields that shouldn't be modified here
+                }
+                System.out.print("Enter new value for " + fieldName + " (or press Enter to keep current value): ");
+                String userInput = scanner.nextLine().trim();
+
+                if (!userInput.isEmpty()) {
+                    setFieldValue(newProject, field, userInput);
+                } else {
+                    field.set(newProject, field.get(curProject));
+                }
+            }
+        } catch (IllegalAccessException e) {
+            System.out.println("Error updating project fields: " + e.getMessage());
+        }
+
+        // d. Set the project ID
+        newProject.setProjectId(curProject.getProjectId());
+
+        // e. Call projectService.modifyProjectDetails()
+        projectService.modifyProjectDetails(newProject);
+
+        // f. Reread the current project
+        curProject = projectService.fetchProjectById(curProject.getProjectId());
+
+        System.out.println("Project details updated successfully.");
+    }
+
+    private void setFieldValue(Project project, Field field, String value) {
+        try {
+            Class<?> fieldType = field.getType();
+            if (fieldType == String.class) {
+                field.set(project, value);
+            } else if (fieldType == Integer.class || fieldType == int.class) {
+                field.set(project, Integer.parseInt(value));
+            } else if (fieldType == BigDecimal.class) {
+                field.set(project, new BigDecimal(value));
+            } else if (fieldType == Double.class || fieldType == double.class) {
+                field.set(project, Double.parseDouble(value));
+            }
+        } catch (IllegalAccessException | IllegalArgumentException e) {
+            System.out.println("Error setting field " + field.getName() + ": " + e.getMessage());
         }
     }
 
