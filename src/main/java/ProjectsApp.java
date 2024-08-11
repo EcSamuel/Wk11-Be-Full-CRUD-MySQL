@@ -12,7 +12,8 @@ public class ProjectsApp {
             "1) Add a project",
             "2) List projects",
             "3) Select a project",
-            "4) Update a project"
+            "4) Update a project",
+            "5) DELETE PROJECT"
     );
 
     private Project curProject;
@@ -46,6 +47,23 @@ public class ProjectsApp {
                         updateProjectDetails();
                     }
                     default -> System.out.println("\n" + selection + " is not a valid selection. Try again.");
+                    case 5 -> {
+                        System.out.println("Enter the project_id of the project you wish to delete. This action cannot be undone!");
+                        listProjects();
+                        Scanner scanner = new Scanner(System.in);
+                        int projectId = scanner.nextInt();
+                        try {
+                            projectService.deleteProject(projectId);
+                            System.out.println("Attempting to delete project " + projectId);
+
+                            if (curProject != null && curProject.getProjectId() == projectId) {
+                                curProject = null;
+                                System.out.println("Current project set to null after deletion");
+                            }
+                        } catch (Exception e) {
+                            System.out.println("Project with Id" + projectId + " cannot be deleted." + e.getMessage());
+                        }
+                    }
                 }
             } catch (Exception e) {
                 System.out.println("\nError: " + e + " Try Again.");

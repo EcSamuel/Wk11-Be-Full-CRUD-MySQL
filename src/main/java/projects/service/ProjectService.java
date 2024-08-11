@@ -38,4 +38,12 @@ public class ProjectService {
             throw new DbException("Project with ID=" + newProject.getProjectId() + " does not exist");
         }
     }
+
+    public void deleteProject(int projectId) {
+        boolean deleted = projectDao.deleteProject(projectId);
+
+        if(!deleted) {
+            throw new DbException("something went wrong deleting " + projectId + ". Please check the ProjectService for more context.");
+        }
+    }
 }

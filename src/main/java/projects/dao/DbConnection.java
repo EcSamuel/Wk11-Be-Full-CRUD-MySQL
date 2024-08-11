@@ -33,4 +33,16 @@ public class DbConnection {
         }
         return connection;
     }
+
+    public static void closeConnection(Connection conn) {
+        if (conn != null) {
+            try {
+                if (!conn.isClosed()) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                throw new DbException("Error closing connection", e);
+            }
+        }
+    }
 }
